@@ -1,0 +1,7 @@
+Pocket Play project-original effects
+Created 2026-11-03
+
+The operation sounds, success/failure cues and completion jingles were synthesized for this project using deterministic additive/FM synthesis. They contain no third-party audio samples or copied song melodies. The recipe is included at audio-authoring/synthesize-modern-sfx.py in the source archive.
+
+The synthesis recipe and hashes are included with the project. The background track has its separate CC0 source record.
+See audio-manifest.json for filenames and hashes.

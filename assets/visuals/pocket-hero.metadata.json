@@ -1,0 +1,12 @@
+{
+  "mode": "built-in image_gen",
+  "intent": "generate",
+  "transparent_background": true,
+  "dimensions": [
+    1536,
+    1024
+  ],
+  "format": "RGBA PNG",
+  "prompt": "Use case: stylized-concept. Asset type: transparent hero illustration for a polished cute Chinese casual-game web app named Pocket Play. Create a premium 3D clay-and-soft-vinyl toy diorama combining the app's two actual games: a friendly mint-green rounded open stationery drawer with a tiny smiling face on the front and chunky pastel pencil, pink eraser, tape roll and scissors peeking out; beside it a miniature lavender-and-coral night-market food stall with a softly striped awning and two cute dumplings. Warm cream highlights, buttery yellow accents, tactile matte clay surfaces with gentle satin edge reflections, lovely soft occlusion shadows, generous rounded geometry, restrained adorable facial features. Isometric three-quarter front view, balanced compact horizontal composition, all objects fully in frame, substantial clean silhouette, small soft contact shadow on an otherwise genuinely transparent background. Fresh and contemporary mobile game art, highly crafted and appetizing to tap. Not a screenshot or UI layout. Absolutely no text, letters, numbers, logos, watermark, frames, or busy decorative background.",
+  "sha256": "bebd04f73a3b3b02efdb80e61354675dde55d8d2d05bde6627d1371ff4aed550"
+}

@@ -1,0 +1,17 @@
+{
+  "name": "摸鱼小铺",
+  "short_name": "摸鱼小铺",
+  "description": "抽屉配对20关、夜市出餐3关。保存到手机，断网也能玩。",
+  "lang": "zh-CN",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#fff9f1",
+  "theme_color": "#fff9f1",
+  "icons": [
+    {"src":"assets/icons/icon-192.png","sizes":"192x192","type":"image/png","purpose":"any"},
+    {"src":"assets/icons/icon-512.png","sizes":"512x512","type":"image/png","purpose":"any"},
+    {"src":"assets/icons/icon-maskable-512.png","sizes":"512x512","type":"image/png","purpose":"maskable"}
+  ]
+}

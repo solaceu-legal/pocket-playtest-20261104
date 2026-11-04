@@ -1,0 +1,8 @@
+Funky House
+Author: Of Far Different Nature
+Verified 2026-11-03
+Source page: https://opengameart.org/content/funky-house
+License stated by the original uploader: CC0
+License URL: https://creativecommons.org/publicdomain/zero/1.0/
+
+The game uses excerpts from this original CC0 track, edited and normalized as recorded in audio-manifest.json.
