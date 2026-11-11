@@ -17,7 +17,7 @@ body{font-family:system-ui,sans-serif;-webkit-user-select:none;user-select:none}
 </style>
 </head>
 <body>
-<canvas id="field" aria-label="航战之港区奇袭，第一人称射击游戏。按回车开始，用 WASD 移动。触屏可长按左下方向键移动、拖动右侧转向。"></canvas>
+<canvas id="field" aria-label="航战之港区奇袭，第一人称射击游戏。按回车开始，用 WASD 移动。触屏可拖动左下摇杆移动、拖动右侧转向。"></canvas>
 <div id="safe"></div>
 <noscript><p id="fallback">请开启 JavaScript 后重新打开游戏。</p></noscript>
 <script>
@@ -758,6 +758,10 @@ class View {
     this.right = w - safe.right - 14;
     this.top = safe.top + 12;
     this.bottom = h - safe.bottom - 13;
+    const radius = h < 525 ? 43 : Math.round(clamp((this.right - this.left) * .16, 46, 59));
+    this.stickLayout = {
+      x: this.left + radius, y: this.bottom - 49 - radius, radius, travel: radius - 18,
+    };
     this.focal = Math.min(w * 0.86, h * 0.92);
     this.highQuality = highQuality;
     this.stride = Math.max(rayStep, w / (highQuality ? 840 : 500));
@@ -1169,24 +1173,22 @@ class View {
     }
   }
 
-  movementPad(active) {
-    const ctx=this.ctx, size=this.h<525?44:Math.round(clamp(this.w*.13,44,54));
-    const gap=4, x=this.left, y=this.bottom-48-size*2-gap, step=size+gap;
-    const keys=[['forward',1,0,-Math.PI/2],['left',0,1,Math.PI],['back',1,1,Math.PI/2],['right',2,1,0]];
-    for (const [key,col,row,rotation] of keys) {
-      const xx=x+col*step, yy=y+row*step, down=active.has(key);
-      rect(ctx,xx,yy,size,size,down?'#d8f990':'rgba(15,27,25,.79)');
-      ctx.lineWidth=1;ctx.strokeStyle=down?'#edffbc':'rgba(217,233,211,.48)';
-      ctx.strokeRect(xx+.5,yy+.5,size-1,size-1);
-      ctx.save();ctx.translate(xx+size/2,yy+size/2);ctx.rotate(rotation);
-      shape(ctx,[[10,0],[-3,-8],[-3,-3],[-10,-3],[-10,3],[-3,3],[-3,8]],down?'#202b1b':'#edf1dd');
-      ctx.restore();
-      this.buttons.push({id:'move-'+key,x:xx,y:yy,w:size,h:size});
+  movementStick(stick) {
+    const ctx = this.ctx, {x, y, radius, travel} = this.stickLayout;
+    circle(ctx,x,y,radius,'rgba(15,27,25,.62)',stick?C.mint:'rgba(217,233,211,.52)',1.2);
+    circle(ctx,x,y,travel,null,'rgba(217,233,211,.2)');
+    for (const [dx,dy] of [[0,-1],[1,0],[0,1],[-1,0]]) {
+      line(ctx,x+dx*(radius-10),y+dy*(radius-10),x+dx*(radius-4),y+dy*(radius-4),'rgba(217,233,211,.55)',1.5);
     }
-    return y;
+    const knobX = x + (stick?.strafe || 0) * travel;
+    const knobY = y - (stick?.forward || 0) * travel;
+    circle(ctx,knobX,knobY,17,stick?C.mint:'#263732',stick?'#edffbc':'#84998a',1.4);
+    circle(ctx,knobX,knobY,4,stick?'#344729':'#c1cec0');
+    this.buttons.push({id:'move-stick',x:x-radius,y:y-radius,w:radius*2,h:radius*2});
+    return y-radius;
   }
 
-  hud(game, activeMoves) {
+  hud(game, stick) {
     const ctx=this.ctx,w=this.w,h=this.h,L=this.left,R=this.right,T=this.top,B=this.bottom;
     rect(ctx,0,0,w,T+136,gradient(ctx,0,0,0,T+136,[[0,'rgba(12,22,21,.87)'],[.68,'rgba(12,22,21,.26)'],[1,'rgba(12,22,21,0)']]));
     rect(ctx,0,B-113,w,h-B+113,gradient(ctx,0,B-113,0,h,[[0,'rgba(12,22,21,0)'],[1,'rgba(12,22,21,.92)']]));
@@ -1208,10 +1210,10 @@ class View {
 
     this.objectiveMarkers(game);
     this.reticle(game);
-    const padTop=this.movementPad(activeMoves);
+    const padTop=this.movementStick(stick);
     const hintY=h*.45+34;
     if(game.noticeUntil>game.time) label(ctx,game.notice,w/2,hintY,{align:'center',size:12,weight:700,color:C.orange,max:w-36});
-    const dialogue=game.radioUntil>game.time ? game.radio : game.time<16 ? '长按方向键移动 · 拖动视角 · 自动开火' : '';
+    const dialogue=game.radioUntil>game.time ? game.radio : game.time<16 ? '拖动摇杆移动 · 拖动右侧转向 · 自动开火' : '';
     if(dialogue && !game.interaction && padTop-55>T+118) {
       const room=R-L;
       const y=Math.min(padTop-53,Math.max(h*.68,T+122));
@@ -1290,7 +1292,7 @@ class View {
     if(mode==='help') {
       label(ctx,'操作指南',px,y+29,{size:24,weight:800});
       const rows=[
-        ['长按左下方向键','前后移动，左右横移。松手即停。'],
+        ['拖动左下摇杆','可向任意方向移动，轻推慢走，松手即停。'],
         ['另一只手拖动画面','可边移动边转向，上下拖动抬枪或压枪。'],
         ['准星对准目标','步枪会自动开火，也会自行换弹。'],
         ['靠近中继或撤离艇','点底部动作按钮，停留到进度完成。'],
@@ -1328,7 +1330,7 @@ class View {
     }
   }
 
-  draw(game,clock,screen,sound,reduced,activeMoves) {
+  draw(game,clock,screen,sound,reduced,stick) {
     this.buttons=[];
     this.sound=sound;
     this.camera(game,clock);
@@ -1338,7 +1340,7 @@ class View {
     this.worldObjects(game);
     this.weather(clock,reduced);
     if(game.mode!=='title') this.weapon(game);
-    if(screen==='play') this.hud(game,activeMoves);
+    if(screen==='play') this.hud(game,stick);
     else if(screen==='title') this.title(game);
     else if(screen==='help' && game.mode==='title') this.title(game);
     if(!['play','title'].includes(screen)) {
@@ -1360,7 +1362,6 @@ const { View } = require('./view.js');
 const defaults = { forward: 0, strafe: 0, fire: false };
 const movementKeys = new Set(['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space']);
 const tapSlop = 7;
-const direction = id => id?.startsWith('move-') ? id.slice(5) : '';
 const HD_LIMITS = [
   { ratio: 3, side: 2800, pixels: 3600000, rayStep: .72 },
   { ratio: 2.65, side: 2400, pixels: 2700000, rayStep: .85 },
@@ -1390,7 +1391,7 @@ function createGame(adapter) {
   let overlay = '';
   let helpFrom = '';
   let touch = null;
-  const moveTouches = new Map();
+  let stick = null;
   let highQuality = adapter.load('quality') !== 'standard';
   let qualityTier = 0;
   let sampledFrames = 0;
@@ -1408,7 +1409,6 @@ function createGame(adapter) {
   let guidedObjective = null;
 
   const screen = () => overlay || mission.mode;
-  const activeMoves = () => new Set(moveTouches.values());
   function syncAudio() {
     const next = sound && !hidden && screen() === 'play';
     if (next === audioAmbience) return;
@@ -1417,17 +1417,18 @@ function createGame(adapter) {
   }
   function clearControls() {
     touch = null;
-    moveTouches.clear();
+    stick = null;
     pressed.clear();
   }
 
   function draw() {
     if (typeof ctx.setTransform === 'function') ctx.setTransform(scale, 0, 0, scale, 0, 0);
-    view.draw(mission, elapsed, screen(), sound, adapter.reduced(), activeMoves());
+    view.draw(mission, elapsed, screen(), sound, adapter.reduced(), stick);
   }
 
   function resize() {
     const { w, h, dpr, safe } = adapter.measure();
+    if (w !== view.w || h !== view.h) clearControls();
     const settings = renderSettings(w, h, dpr, highQuality, qualityTier);
     scale = settings.scale;
     adapter.canvas.width = Math.round(w * scale);
@@ -1510,9 +1511,9 @@ function createGame(adapter) {
     if (hidden) return;
     if (sound) adapter.unlockSound();
     const button = view.hit(x,y)?.id;
-    const moveKey = direction(button);
-    if (screen() === 'play' && moveKey) {
-      moveTouches.set(id, moveKey);
+    if (screen() === 'play' && button === 'move-stick') {
+      if (stick) return;
+      stick = { id, x, y, strafe: 0, forward: 0 };
       mission.stop();
       guide = false;
       guidedObjective = null;
@@ -1524,8 +1525,16 @@ function createGame(adapter) {
   }
 
   function move(id, x, y) {
-    if (moveTouches.has(id)) {
-      moveTouches.set(id, direction(view.hit(x,y)?.id));
+    if (stick?.id === id) {
+      const dx = x - stick.x, dy = y - stick.y;
+      const distance = Math.hypot(dx, dy);
+      const travel = view.stickLayout.travel;
+      const deadZone = 4;
+      const magnitude = distance > deadZone
+        ? clamp((distance - deadZone) / (travel - deadZone), 0, 1) / distance
+        : 0;
+      stick.strafe = dx * magnitude;
+      stick.forward = -dy * magnitude;
       return;
     }
     if (!touch || touch.id !== id || touch.button || screen() !== 'play') return;
@@ -1541,7 +1550,8 @@ function createGame(adapter) {
   }
 
   function up(id, x, y, cancel = false) {
-    if (moveTouches.delete(id)) {
+    if (stick?.id === id) {
+      stick = null;
       draw();
       return;
     }
@@ -1611,9 +1621,10 @@ function createGame(adapter) {
         }
         if (input.forward || input.strafe) { guide = false; guidedObjective = null; }
       }
-      const moves = activeMoves();
-      input.forward = clamp(input.forward + Number(moves.has('forward')) - Number(moves.has('back')), -1, 1);
-      input.strafe = clamp(input.strafe + Number(moves.has('right')) - Number(moves.has('left')), -1, 1);
+      if (stick) {
+        input.forward = clamp(input.forward + stick.forward, -1, 1);
+        input.strafe = clamp(input.strafe + stick.strafe, -1, 1);
+      }
       const next = mission.path[0] || guidedObjective;
       if (guide && next && elapsed-aimAt>1.1 && !mission.target && !touch) {
         const p = mission.player;
